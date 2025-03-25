@@ -14,6 +14,14 @@ public class Board : MonoBehaviour
 
     public float gemSpeed = 0; // Board 클래스에서 보석 이동 속도 관리 -> 보드의 모든 보석이 동일한 속도로 이동
 
+    public MatchFinder matchFinder; 
+
+    private void Awake()
+    {
+        if(matchFinder == null)
+           matchFinder = Object.FindFirstObjectByType<MatchFinder>(); 
+    }
+
     void Start()
     {
         tileSize = tilePrefab.GetComponent<SpriteRenderer>().bounds.size.x;
@@ -21,6 +29,11 @@ public class Board : MonoBehaviour
 
         allGems = new Gem[width, height];
         SetupBoard();
+    }
+
+    void Update()
+    {
+        matchFinder.FindAllMatches();
     }
 
     // 보드 설정 함수
@@ -35,7 +48,24 @@ public class Board : MonoBehaviour
                 tile.transform.parent = transform;
                 tile.name = $"Tile ({x}, {y})";
 
-                int gemToUse = Random.Range(0, gems.Length);
+                int gemToUse = Random.Range(0, gems.Length); // 보석 종류 랜덤 선택
+                int iterations = 0; // 반복 횟수
+
+                while (MatchesAt(new Vector2Int(x, y), gems[gemToUse]) && iterations < 100)
+                {
+                    gemToUse = Random.Range(0, gems.Length);
+                    iterations++;
+
+                    if (iterations > 0 && iterations < 100)
+                    {
+                        Debug.LogWarning($"Retrying gem selection at ({x}, {y}), attempts: {iterations}");
+                    }
+                    else if (iterations >= 100)
+                    {
+                        Debug.LogError("SetupBoard failed: too many retries, possible infinite loop.");
+                    }
+                }
+                
                 SpawnGem(new Vector2Int(x, y), gems[gemToUse], position);
             }
         }
@@ -52,5 +82,28 @@ public class Board : MonoBehaviour
         allGems[gridPosition.x, gridPosition.y] = gem;
         // 보석의 그리드 좌표와 보드 참조 설정
         gem.SetupGem(gridPosition, this);
+    }
+
+    bool MatchesAt(Vector2Int positionToCheck, Gem gemToCheck)
+    {
+        if(positionToCheck.x > 1)
+        {
+            if (allGems[positionToCheck.x - 1, positionToCheck.y].gemType == gemToCheck.gemType &&
+                allGems[positionToCheck.x - 2, positionToCheck.y].gemType == gemToCheck.gemType)
+            {
+                return true;
+            }
+        }
+
+        if (positionToCheck.y > 1)
+        {
+            if (allGems[positionToCheck.x, positionToCheck.y - 1].gemType == gemToCheck.gemType &&
+                allGems[positionToCheck.x, positionToCheck.y - 2].gemType == gemToCheck.gemType)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

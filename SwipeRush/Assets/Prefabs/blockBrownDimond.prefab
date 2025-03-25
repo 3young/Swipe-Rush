@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &5374655040679908922
+--- !u!1 &1474601094615179535
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,24 +8,24 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6798892235086684389}
-  - component: {fileID: 4902818150269574492}
-  - component: {fileID: 7788528126333584086}
-  - component: {fileID: -488537222063387311}
+  - component: {fileID: 1085345932721738430}
+  - component: {fileID: 4084859193468678923}
+  - component: {fileID: 1307500056656666442}
+  - component: {fileID: -2805291867270439421}
   m_Layer: 0
-  m_Name: blockLightBlueDimond
+  m_Name: blockBrownDimond
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6798892235086684389
+--- !u!4 &1085345932721738430
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5374655040679908922}
+  m_GameObject: {fileID: 1474601094615179535}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -34,13 +34,13 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &4902818150269574492
+--- !u!212 &4084859193468678923
 SpriteRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5374655040679908922}
+  m_GameObject: {fileID: 1474601094615179535}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -78,7 +78,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: def4de0560faecd4391f9c8db825de08, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d9c311d7992686046ad97297f5aaf0b7, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -89,30 +89,30 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &7788528126333584086
+--- !u!114 &1307500056656666442
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5374655040679908922}
+  m_GameObject: {fileID: 1474601094615179535}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf568b0d997bf0f44a2f70ce1fcae80a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gemType: 2
+  gemType: 5
   gridIndex: {x: 0, y: 0}
   board: {fileID: 0}
   previousPosition: {x: 0, y: 0}
   isMatched: 0
---- !u!61 &-488537222063387311
+--- !u!61 &-2805291867270439421
 BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5374655040679908922}
+  m_GameObject: {fileID: 1474601094615179535}
   m_Enabled: 1
   serializedVersion: 3
   m_Density: 1

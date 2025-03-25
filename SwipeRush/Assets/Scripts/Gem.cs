@@ -1,21 +1,33 @@
 using System;
+using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 
 public class Gem : MonoBehaviour
 {
+    public enum GemType { Blue, Green, Sky, Pink, Yellow, Brown };
+    public GemType gemType;
+
     [HideInInspector] public Vector2Int gridIndex; // 그리드 좌표 저장
     [HideInInspector] public Board board; // 보드 참조
+    [HideInInspector] public Vector2Int previousPosition; // 이전 위치 저장
 
-    private Vector2 firstTouchPosition; // 스와이프 시작 위치
-    private Vector2 finalTouchPosition; // 스와이프 종료 위치
-    private bool mousePressed; // 마우스 클릭 여부
+    public bool isMatched;
+
+    private Vector2 startTouchPosition; // 스와이프 시작 위치
+    private Vector2 endTouchPosition; // 스와이프 종료 위치
+    private bool isDragging; // 마우스 클릭 여부
     private float swipeAngle = 0; // 스와이프 각도
 
     private Gem otherGem; // 이동할 위치의 보석
-    public Vector2Int previousGirdIndex; // 이전 그리드 좌표
 
     private void Update()
+    {
+        MoveTowardsTarget();
+        HandleInput();
+    }
+
+    private void MoveTowardsTarget()
     {
         Vector3 targetPosition = GetWorldPosition(gridIndex);
 
@@ -29,12 +41,15 @@ public class Gem : MonoBehaviour
             transform.position = targetPosition;
             board.allGems[gridIndex.x, gridIndex.y] = this;
         }
+    }
 
+    private void HandleInput()
+    {
         // 마우스 입력 감지
-        if (mousePressed && Input.GetMouseButtonUp(0))
+        if (isDragging && Input.GetMouseButtonUp(0))
         {
-            mousePressed = false;
-            finalTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition); // 화면 좌표를 월드 좌표로 반환
+            isDragging = false;
+            endTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition); // 화면 좌표를 월드 좌표로 반환
             CalculateAngle();
         }
     }
@@ -49,32 +64,31 @@ public class Gem : MonoBehaviour
     public void SetupGem(Vector2Int position, Board theBoard)
     {
         gridIndex = position;
-        previousGirdIndex = position;
         board = theBoard;
         transform.position = GetWorldPosition(gridIndex);
     }
 
     private void OnMouseDown()
     {
-        firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition); 
-        mousePressed = true;
+        startTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        isDragging = true;
     }
 
     // 이동 각도 계산 함수
     private void CalculateAngle()
     {
-        swipeAngle = Mathf.Atan2(finalTouchPosition.y - firstTouchPosition.y, finalTouchPosition.x - firstTouchPosition.x) * Mathf.Rad2Deg; // 드 점 사이의 각도를 라디안 단위로 반환
+        swipeAngle = Mathf.Atan2(endTouchPosition.y - startTouchPosition.y, endTouchPosition.x - startTouchPosition.x) * Mathf.Rad2Deg; // 두 점 사이의 각도를 라디안 단위로 반환
 
-        if(Vector3.Distance(firstTouchPosition, finalTouchPosition) > 0.5f)
+        if (Vector3.Distance(startTouchPosition, endTouchPosition) > 0.5f)
         {
-            MoveGem();
+            TrySwapGem();
         }
     }
 
     // 보석 이동 함수
-    private void MoveGem()
+    private void TrySwapGem()
     {
-        previousGirdIndex = gridIndex;
+        previousPosition = gridIndex;
 
         if (swipeAngle >= -45 && swipeAngle < 45 && gridIndex.x < board.width - 1)
         {
@@ -82,22 +96,19 @@ public class Gem : MonoBehaviour
             otherGem.gridIndex.x--;
             gridIndex.x++;
         }
-
-        else if(swipeAngle >= 45 && swipeAngle < 135 && gridIndex.y < board.height-1)
+        else if (swipeAngle >= 45 && swipeAngle < 135 && gridIndex.y < board.height - 1)
         {
             otherGem = board.allGems[gridIndex.x, gridIndex.y + 1];
             otherGem.gridIndex.y--;
             gridIndex.y++;
         }
-
-        else if(swipeAngle >= 135 || swipeAngle < -135 && gridIndex.x > 0)
+        else if (swipeAngle >= 135 || swipeAngle < -135 && gridIndex.x > 0)
         {
             otherGem = board.allGems[gridIndex.x - 1, gridIndex.y];
             otherGem.gridIndex.x++;
             gridIndex.x--;
         }
-
-        else if(swipeAngle >= -135 && swipeAngle < -45 && gridIndex.y > 0)
+        else if (swipeAngle >= -135 && swipeAngle < -45 && gridIndex.y > 0)
         {
             otherGem = board.allGems[gridIndex.x, gridIndex.y - 1];
             otherGem.gridIndex.y++;
@@ -106,6 +117,27 @@ public class Gem : MonoBehaviour
 
         board.allGems[gridIndex.x, gridIndex.y] = this;
         board.allGems[otherGem.gridIndex.x, otherGem.gridIndex.y] = otherGem;
+
+        StartCoroutine(CheckAndRevertMoveCo());
     }
 
+    public IEnumerator CheckAndRevertMoveCo()
+    {
+        yield return new WaitForSeconds(0.5f);
+        board.matchFinder.FindAllMatches(); // 매치 검사
+
+        if (otherGem != null)
+        {
+            if (!isMatched && !otherGem.isMatched) // 매치되지 않은 경우
+            {
+                // 보석 위치 원래대로
+                otherGem.gridIndex = gridIndex;
+                gridIndex = previousPosition;
+
+                // 그리드 좌표 갱신
+                board.allGems[gridIndex.x, gridIndex.y] = this;
+                board.allGems[otherGem.gridIndex.x, otherGem.gridIndex.y] = otherGem;
+            }
+        }
+    }
 }
