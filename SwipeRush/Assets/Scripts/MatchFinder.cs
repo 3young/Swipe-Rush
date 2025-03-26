@@ -15,6 +15,7 @@ public class MatchFinder : MonoBehaviour
 
     public void FindAllMatches()
     {
+        currentMatches.Clear(); // 매치된 보석 리스트 초기화
         for (int x = 0; x < board.width; x++)
         {
             for (int y = 0; y < board.height; y++)
@@ -74,5 +75,4 @@ public class MatchFinder : MonoBehaviour
             }
         }
     }
-
 }
