@@ -20,6 +20,8 @@ public class Gem : MonoBehaviour
 
     private Gem otherGem; // 이동할 위치의 보석
 
+    public GameObject destroyEffect;
+
     private void Update()
     {
         MoveTowardsTarget();

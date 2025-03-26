@@ -101,9 +101,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf568b0d997bf0f44a2f70ce1fcae80a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gemType: 0
   gridIndex: {x: 0, y: 0}
   board: {fileID: 0}
-  previousGridIndex: {x: 0, y: 0}
+  previousPosition: {x: 0, y: 0}
+  isMatched: 0
+  destroyEffect: {fileID: 7427396495399349569, guid: 1b9d129ed6ec9334cadaecd1bac2fd65, type: 3}
 --- !u!61 &825783101892521787
 BoxCollider2D:
   m_ObjectHideFlags: 0

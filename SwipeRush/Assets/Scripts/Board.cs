@@ -248,6 +248,7 @@ public class Board : MonoBehaviour
 
         if (gem != null && gem.isMatched)
         {
+            Instantiate(gem.destroyEffect, GetWorldPosition(gridIndex), Quaternion.identity);
             Destroy(gem.gameObject);
             allGems[gridIndex.x, gridIndex.y] = null;
         }
