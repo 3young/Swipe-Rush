@@ -24,6 +24,8 @@ public class Board : MonoBehaviour
     public enum BoardState { moving, waiting }
     public BoardState currentState = BoardState.moving;
 
+    public RoundManager roundManager;
+
     private void Awake()
     {
         if(matchFinder == null)
@@ -32,6 +34,8 @@ public class Board : MonoBehaviour
 
     void Start()
     {
+        ScoreManager.instance.ResetScore();
+
         tileSize = tilePrefab.GetComponent<SpriteRenderer>().bounds.size.x;
         boardOffset = new Vector2(-width / 2.0f + 0.5f, -height / 2.0f + 0.5f) * tileSize;
 
@@ -216,8 +220,9 @@ public class Board : MonoBehaviour
     {
         foreach (var gem in matchFinder.currentMatches)
         {
-            if (gem != null)
+            if (gem != null && gem.isMatched)
             {
+                ScoreManager.instance.AddScore(gem.scoreValue);
                 DestroyMatchedGemAt(gem.gridIndex);
             }
         }

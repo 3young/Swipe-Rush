@@ -22,6 +22,8 @@ public class Gem : MonoBehaviour
 
     public GameObject destroyEffect;
 
+    public int scoreValue = 10;
+
     private void Update()
     {
         MoveTowardsTarget();
