@@ -23,10 +23,10 @@ public class TimeBar : MonoBehaviour
             remainingTime -= Time.deltaTime;
             timeSlider.value = remainingTime;
         }
-        else
+        else if(remainingTime <= 0 && !roundManager.waitingForAutoMatches)
         {
             remainingTime = 0;
-            roundManager.EndRound();
+            roundManager.TryEndRoundAfterAutoMatches();
         }
     }
 
