@@ -2,10 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 using UnityEngine.SceneManagement;
-using static Gem;
-using static UnityEditor.PlayerSettings;
 
 public class Board : MonoBehaviour
 {
@@ -16,48 +13,50 @@ public class Board : MonoBehaviour
     public int height;
     public GameObject tilePrefab;
 
-    public Gem[] gems; // 보석 종류 배열
-    public LevelData[] levelDataArray; // 레벨 데이터 배열
-    public Gem[] activeGems; // 활성화된 보석 배열
+    public Gem[] gems;
+    public LevelData[] levelDataArray; 
+    public Gem[] activeGems; 
 
-    public Gem[,] allGems; // 보드의 모든 보석을 저장하는 배열
-
-    public float gemSpeed = 15; // Board 클래스에서 보석 이동 속도 관리 -> 보드의 모든 보석이 동일한 속도로 이동
+    public Gem[,] allGems; 
+    public float gemSpeed = 15;
 
     public MatchFinder matchFinder; 
+    public RoundManager roundManager;
+
+    private GemFactory gemFactory;
+    private LevelData currentLevelData;
+    private int currentStoneCount = 0;
 
     public enum BoardState { moving, waiting }
     public BoardState currentState = BoardState.moving;
 
-    public RoundManager roundManager;
-    private LevelData currentLevelData;
-    private int currentStoneCount = 0;
+    private const int MAX_ITERATIONS = 100;
 
     private void Awake()
     {
         if (matchFinder == null)
             matchFinder = Object.FindFirstObjectByType<MatchFinder>();
 
-        string currentSceneName = SceneManager.GetActiveScene().name;
+        string sceneName = SceneManager.GetActiveScene().name;
+        int levelNum = 1;
 
-        int levelNumber = 1;
-        if (currentSceneName.StartsWith("Level") && currentSceneName.Length > 5)
+        if (sceneName.StartsWith("Level") && sceneName.Length > 5)
         {
-            int.TryParse(currentSceneName.Substring(5), out levelNumber);
-            levelNumber = Mathf.Clamp(levelNumber, 1, levelDataArray.Length);
+            int.TryParse(sceneName.Substring(5), out levelNum);
+            levelNum = Mathf.Clamp(levelNum, 1, levelDataArray.Length);
         }
 
-        if (levelNumber <= levelDataArray.Length && levelDataArray[levelNumber - 1] != null)
+        if (levelNum <= levelDataArray.Length && levelDataArray[levelNum - 1] != null)
         {
-            currentLevelData = levelDataArray[levelNumber - 1];
+            currentLevelData = levelDataArray[levelNum - 1];
             activeGems = currentLevelData.availableGems;
             width = currentLevelData.width;
             height = currentLevelData.height;
         }
         else
         {
-            Debug.LogWarning($"레벨 데이터가 없습니다: Level {levelNumber}, 기본 설정을 사용합니다.");
-            activeGems = gems; // 기본 보석 사용
+            Debug.LogWarning($"레벨 데이터가 없음: Level {levelNum}, 기본 설정을 사용");
+            activeGems = gems; 
         }
     }
 
@@ -70,14 +69,14 @@ public class Board : MonoBehaviour
         boardOffset = new Vector2(-width / 2.0f + 0.5f, -height / 2.0f + 0.5f) * tileSize;
 
         allGems = new Gem[width, height];
+        gemFactory = new GemFactory(tileSize, boardOffset, transform, this, activeGems);
+
         SetupBoard();
         CountStoneBlocks();
     }
 
-    // 보드 설정
     private void SetupBoard()
     {
-        // 스톤 카운트 초기화
         currentStoneCount = 0;
         
         for (int x = 0; x < width; x++)
@@ -85,118 +84,60 @@ public class Board : MonoBehaviour
             for (int y = 0; y < height; y++)
             {
                 Vector2 position = new Vector2(x * tileSize, y * tileSize) + boardOffset;
-                GameObject tile = Instantiate(tilePrefab, position, Quaternion.identity);
-                tile.transform.parent = transform;
+                GameObject tile = Instantiate(tilePrefab, position, Quaternion.identity, transform);
                 tile.name = $"Tile ({x}, {y})";
 
-                // 스톤 생성 조건
                 bool createStone = currentStoneCount < currentLevelData.maxStoneBlocks && 
                                   Random.value < currentLevelData.stoneSpawnChance;
                 
                 Gem gemToSpawn;
+
                 if (createStone)
                 {
-                    // 스톤 젬 찾기
-                    Gem stoneGem = null;
-                    foreach (Gem gem in activeGems)
+                    Gem stone = gemFactory.FindStoneGem();
+                    if (stone != null)
                     {
-                        if (gem.gemType == Gem.GemType.Stone)
-                        {
-                            stoneGem = gem;
-                            break;
-                        }
-                    }
-                    
-                    if (stoneGem != null)
-                    {
-                        gemToSpawn = stoneGem;
+                        gemToSpawn = stone;
                         currentStoneCount++;
                         SpawnGem(new Vector2Int(x, y), gemToSpawn);
-                        continue; // 스톤은 매치 체크 없이 바로 생성
+                        continue; 
                     }
                 }
                 
-                // 일반 젬 생성
-                int gemToUse = Random.Range(0, activeGems.Length);
+                gemToSpawn = gemFactory.GetRandomNonStoneGem();
                 int iterations = 0;
-                
-                // 스톤이 아닌 젬만 선택
-                while (activeGems[gemToUse].gemType == Gem.GemType.Stone && iterations < 100)
+
+                while (IsMatchAt(new Vector2Int(x, y), gemToSpawn) && iterations < MAX_ITERATIONS)
                 {
-                    gemToUse = Random.Range(0, activeGems.Length);
+                    gemToSpawn = gemFactory.GetRandomNonStoneGem();
                     iterations++;
                 }
                 
-                // 매치 체크 반복
-                iterations = 0;
-                while (MatchesAt(new Vector2Int(x, y), activeGems[gemToUse]) && iterations < 100)
-                {
-                    gemToUse = Random.Range(0, activeGems.Length);
-                    // 스톤 제외
-                    while (activeGems[gemToUse].gemType == Gem.GemType.Stone && iterations < 100)
-                    {
-                        gemToUse = Random.Range(0, activeGems.Length);
-                        iterations++;
-                    }
-                    
-                    iterations++;
-                    if (iterations >= 100)
-                    {
-                        Debug.LogError("SetupBoard failed: too many retries, possible infinite loop.");
-                    }
-                }
-                
-                SpawnGem(new Vector2Int(x, y), activeGems[gemToUse]);
+                SpawnGem(new Vector2Int(x, y), gemToSpawn);
             }
         }
     }
 
-    // 보석 생성
-    private void SpawnGem(Vector2Int gridPosition, Gem gemToSpawn)
+    private void SpawnGem(Vector2Int gridPos, Gem gemPrefab)
     {
-        if (gemToSpawn.gemType == GemType.Stone)
+        if (gemFactory.IsStone(gemPrefab) && currentStoneCount < currentLevelData.maxStoneBlocks)
         {
-            if (currentStoneCount >= currentLevelData.maxStoneBlocks)
-            {
-                Gem nonStoneGem = null;
-                foreach (Gem activeGem in activeGems)
-                {
-                    if (activeGem.gemType != Gem.GemType.Stone)
-                    {
-                        nonStoneGem = activeGem;
-                        break;
-                    }
-                }
-
-                if (nonStoneGem != null)
-                {
-                    gemToSpawn = nonStoneGem;
-                }
-            }
-            else
-            {
-                currentStoneCount++;
-            }
+            currentStoneCount++;
+        }
+        else if (gemFactory.IsStone(gemPrefab))
+        {
+            gemPrefab = gemFactory.GetRandomNonStoneGem();
         }
 
-        // 모든 보석 타입(스톤 포함)에 대해 동일한 스폰 위치 사용
-        Vector3 spawnPosition = new Vector3(gridPosition.x * tileSize, (gridPosition.y + height) * tileSize, -0.1f) + (Vector3)boardOffset;
-        
-        // 보석을 월드 좌표에 생성
-        Gem gem = Instantiate(gemToSpawn, spawnPosition, Quaternion.identity);
-        gem.transform.parent = transform;
-        gem.name = $"Gem ({gridPosition.x}, {gridPosition.y})";
-        
-        // 보석의 그리드 좌표 설정
-        allGems[gridPosition.x, gridPosition.y] = gem;
-        
-        // 보석의 그리드 좌표와 보드 참조 설정
-        gem.SetupGem(gridPosition, this);
-        
-        // 스톤 보석이면 바로 최종 위치로 이동시킴
-        if (gem.gemType == GemType.Stone)
+        Gem gem = GemPoolManager.instance.GetGem(gemPrefab.gemType);
+        gem.transform.position = GetWorldPosition(gridPos);
+        gem.SetupGem(gridPos, this);
+
+        allGems[gridPos.x, gridPos.y] = gem;
+
+        if (gemFactory.IsStone(gem))
         {
-            gem.transform.position = GetWorldPosition(gridPosition);
+            gem.transform.position = GetWorldPosition(gridPos);
         }
     }
 
@@ -318,41 +259,36 @@ public class Board : MonoBehaviour
     }
 
     // 매치된 보석 확인 (수정)
-    bool MatchesAt(Vector2Int positionToCheck, Gem gemToCheck)
+    private bool IsMatchAt(Vector2Int position, Gem gem)
     {
-        // 스톤은 매치 체크에서 제외
-        if (gemToCheck.gemType == GemType.Stone)
-        {
-            return false;
-        }
-
-        if(positionToCheck.x > 1)
-        {
-            if (allGems[positionToCheck.x - 1, positionToCheck.y] != null && 
-                allGems[positionToCheck.x - 2, positionToCheck.y] != null &&
-                allGems[positionToCheck.x - 1, positionToCheck.y].gemType == gemToCheck.gemType &&
-                allGems[positionToCheck.x - 2, positionToCheck.y].gemType == gemToCheck.gemType)
-            {
-                return true;
-            }
-        }
-
-        if (positionToCheck.y > 1)
-        {
-            if (allGems[positionToCheck.x, positionToCheck.y - 1] != null && 
-                allGems[positionToCheck.x, positionToCheck.y - 2] != null &&
-                allGems[positionToCheck.x, positionToCheck.y - 1].gemType == gemToCheck.gemType &&
-                allGems[positionToCheck.x, positionToCheck.y - 2].gemType == gemToCheck.gemType)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        // 스톤은 매치 체크 제외
+        if (!gem.IsMatchable) return false;
+        return CheckHorizontalMatchAt(position, gem) || CheckVerticalMatchAt(position, gem);
     }
 
-    // 매치된 보석 제거
-    public void DestroyMatches()
+    private bool CheckHorizontalMatchAt(Vector2Int position, Gem gem)
+    {
+        if (position.x <= 1) return false;
+        Gem leftGem1 = allGems[position.x - 1, position.y];
+        Gem leftGem2 = allGems[position.x - 2, position.y];
+        
+        return leftGem1 != null && leftGem2 != null &&
+               leftGem1.gemType == gem.gemType &&
+               leftGem2.gemType == gem.gemType;
+    }
+
+    private bool CheckVerticalMatchAt(Vector2Int position, Gem gem)
+    {
+        if (position.y <= 1) return false;
+        Gem downGem1 = allGems[position.x, position.y - 1];
+        Gem downGem2 = allGems[position.x, position.y - 2];
+        
+        return downGem1 != null && downGem2 != null &&
+               downGem1.gemType == gem.gemType &&
+               downGem2.gemType == gem.gemType;
+    }
+
+    public void DestroyMatchedGems()
     {
         if (matchFinder.currentMatches.Count == 0)
         {
@@ -378,7 +314,7 @@ public class Board : MonoBehaviour
 
         matchFinder.currentMatches.Clear();
         ResetAllMatchFlags();
-        StartCoroutine(DecreaseRowCo());
+        StartCoroutine(CollapseEmptySpacesCo());
     }
 
     private void ResetAllMatchFlags()
@@ -400,7 +336,7 @@ public class Board : MonoBehaviour
     {
         if (x < 0 || x >= width || y < 0 || y >= height)
         {
-            Debug.LogWarning($"범위 밖의 좌표: ({x}, {y})");
+            //Debug.LogWarning($"범위 밖의 좌표: ({x}, {y})");
             return;
         }
 
@@ -408,27 +344,25 @@ public class Board : MonoBehaviour
 
         if (gem == null)
         {
-            Debug.LogWarning($"좌표 ({x}, {y})에 젬이 없음");
+            //Debug.LogWarning($"좌표 ({x}, {y})에 젬이 없음");
             return;
         }
 
-        // 추가 검증
         if (gem.gridIndex.x != x || gem.gridIndex.y != y)
         {
-            Debug.LogWarning($"젬 좌표 불일치: 젬 내부 ({gem.gridIndex.x}, {gem.gridIndex.y}) vs 배열 좌표 ({x}, {y})");
+            //Debug.LogWarning($"젬 좌표 불일치: 젬 내부 ({gem.gridIndex.x}, {gem.gridIndex.y}) vs 배열 좌표 ({x}, {y})");
             return;
         }
 
-        // 파괴 가능한 보석인지 확인
         if (!gem.IsDestructible)
         {
-            gem.isMatched = false;
+            //gem.isMatched = false;
             return;
         }
 
         if (!gem.isMatched)
         {
-            Debug.LogWarning($"매치되지 않은 젬 파괴 시도: ({x}, {y})");
+            //Debug.LogWarning($"매치되지 않은 젬 파괴 시도: ({x}, {y})");
             return;
         }
 
@@ -438,19 +372,28 @@ public class Board : MonoBehaviour
 
         if (gem.destroyEffect != null)
         {
-            GameObject effect = Instantiate(gem.destroyEffect, gem.transform.position, Quaternion.identity);
-            Destroy(effect, 1f);
+            GameObject effect = GemPoolManager.instance.GetEffect(gem.destroyEffect);
+            effect.transform.position = gem.transform.position;
+            effect.SetActive(true);
+            StartCoroutine(ReturnEffectAfterDelay(effect,1f));
         }
 
         SFXManager.instance.PlayGemBreak();
 
-        Debug.Log($"젬 파괴: {gem.name} at ({x}, {y})");
-        Destroy(gem.gameObject);
+        //Debug.Log($"젬 파괴: {gem.name} at ({x}, {y})");
+
         allGems[x, y] = null;
+        GemPoolManager.instance.ReturnGem(gem);
+    }
+
+    private IEnumerator ReturnEffectAfterDelay(GameObject obj, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        GemPoolManager.instance.ReturnEffect(obj);
     }
 
     // 보석 이동 코루틴 함수 수정
-    private IEnumerator DecreaseRowCo()
+    private IEnumerator CollapseEmptySpacesCo()
     {
         yield return new WaitForSeconds(0.25f);
 
@@ -467,19 +410,29 @@ public class Board : MonoBehaviour
                 if (allGems[x, y] == null)
                 {
                     nullCount++;
+                    continue;
                 }
+                
+                // 이동 불가능한 보석 (스톤 등)은 nullCount 리셋
+                if (!allGems[x, y].IsMovable)
+                {
+                    nullCount = 0;
+                    continue;
+                }
+                
                 // 2. 빈 공간 위에 있는 보석 이동 처리
-                else if(nullCount > 0)
+                if(nullCount > 0)
                 {
                     var gemToMove = allGems[x, y];
                     
                     // 로그 추가
-                    Debug.Log($"젬 이동: {gemToMove.name} 위치 ({x}, {y}) -> ({x}, {y - nullCount})");
+                    // Debug.Log($"젬 이동: {gemToMove.name} 위치 ({x}, {y}) -> ({x}, {y - nullCount})");
                     
-                    // 이동 가능한 보석인지 확인 
-                    if (!gemToMove.IsMovable)
+                    // 이동 위치에 이미 다른 보석이 있는지 확인 (이상 상황 방지)
+                    if (allGems[x, y - nullCount] != null)
                     {
-                        nullCount = 0; // 이 위치에서 nullCount 리셋
+                        //Debug.LogError($"이미 보석이 있는 위치로 이동 시도: ({x}, {y - nullCount})에 {allGems[x, y - nullCount].name} 존재");
+                        nullCount = 0; // 충돌 발생 시 nullCount 리셋
                         continue;
                     }
                     
@@ -492,36 +445,50 @@ public class Board : MonoBehaviour
                     }
                     else
                     {
-                        Debug.LogError($"잘못된 이동 좌표 (y - nullCount < 0): ({x}, {y - nullCount})");
+                        //Debug.LogError($"잘못된 이동 좌표 (y - nullCount < 0): ({x}, {y - nullCount})");
                     }
                 }
             }
         }
         
-        // 다시 한 번 위치 검증
+        // 다시 한 번 위치 검증 및 비어있는 타일 확인
         ValidateGemPositions();
+        LogEmptyTiles("CollapseEmptySpacesCo 종료 후");
         
         StartCoroutine(FillBoardCo());
     }
 
-    public IEnumerator FillBoardCo()
+    private IEnumerable<Vector2Int> GetEmptyTilePositions()
     {
-        yield return new WaitForSeconds(0.2f);
-        
-        // 빈 타일 확인 및 로깅
-        int emptyTiles = 0;
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
                 if (allGems[x, y] == null)
                 {
-                    emptyTiles++;
+                    yield return new Vector2Int(x, y);
                 }
             }
         }
-        Debug.Log($"FillBoardCo 시작: 빈 타일 개수 = {emptyTiles}");
+    }
+
+    private void LogEmptyTiles(string context)
+    {
+        var emptyTiles = GetEmptyTilePositions().ToList(); 
+        foreach (var position in emptyTiles)
+        {
+            Debug.LogWarning($"{context}: 비어있는 타일 ({position.x}, {position.y})");
+        }
+        Debug.Log($"{context}: 비어있는 타일 개수 = {emptyTiles.Count}");
+    }
+
+
+    public IEnumerator FillBoardCo()
+    {
+        yield return new WaitForSeconds(0.2f);
         
+        LogEmptyTiles("FillBoardCo 시작");
+
         RefillBoard();
         
         // 스톤 보석 위치 강제 고정
@@ -537,20 +504,7 @@ public class Board : MonoBehaviour
             }
         }
         
-        // 빈 타일 다시 확인
-        emptyTiles = 0;
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                if (allGems[x, y] == null)
-                {
-                    emptyTiles++;
-                    Debug.LogWarning($"리필 후에도 비어있는 타일: ({x}, {y})");
-                }
-            }
-        }
-        Debug.Log($"리필 후 빈 타일 개수 = {emptyTiles}");
+        LogEmptyTiles("리필 후");
 
         yield return new WaitForSeconds(0.2f);
         matchFinder.FindAllMatches();
@@ -558,7 +512,7 @@ public class Board : MonoBehaviour
         if(matchFinder.currentMatches.Count > 0)
         {
             yield return new WaitForSeconds(0.2f);
-            DestroyMatches();
+            DestroyMatchedGems();
         }
         else
         {
@@ -577,9 +531,11 @@ public class Board : MonoBehaviour
 
     private void RefillBoard()
     {
-        int stonesToSpawn = 0; // 이번 리필에서 생성할 스톤 수 제한
-        int maxNewStones = 1; // 한 번에 최대 1개의 새 스톤만 허용
+        int stonesToSpawn = 0;
+        int maxNewStones = 1; 
         
+        LogEmptyTiles("RefillBoard 시작");
+
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
@@ -596,49 +552,61 @@ public class Board : MonoBehaviour
                         stonesToSpawn++;
                     }
 
+                    Vector2Int gridPos = new Vector2Int(x, y);
+                    Vector2Int spawnFrom = new Vector2Int(x, y + 5);
+
                     if (createStone)
                     {
-                        Gem stoneGem = null;
-                        foreach (Gem gem in activeGems)
-                        {
-                            if (gem.gemType == Gem.GemType.Stone)
-                            {
-                                stoneGem = gem;
-                                break;
-                            }
-                        }
+                        Gem stoneGem = gemFactory.FindStoneGem();
 
                         if (stoneGem != null)
                         {
-                            SpawnGem(new Vector2Int(x, y), stoneGem);
+                            Gem gem = GemPoolManager.instance.GetGem(stoneGem.gemType);
+                            gem.transform.position = GetWorldPosition(spawnFrom);
+                            gem.SetupGem(gridPos, this);
+                            allGems[x, y] = gem;
+                            currentStoneCount++;
                         }
                         else
                         {
                             int gemToUse = Random.Range(0, activeGems.Length);
-                            SpawnGem(new Vector2Int(x, y), activeGems[gemToUse]);
+                            Gem gem = GemPoolManager.instance.GetGem(activeGems[gemToUse].gemType);
+                            gem.transform.position = GetWorldPosition(spawnFrom);
+                            gem.SetupGem(gridPos, this);
+                            allGems[x, y] = gem;
                         }
                     }
                     else
                     {
                         int gemToUse = Random.Range(0, activeGems.Length);
-
                         int attempts = 0;
-                        while (activeGems[gemToUse].gemType == Gem.GemType.Stone && attempts < 100)
+
+                        while (activeGems[gemToUse].gemType == Gem.GemType.Stone && attempts < MAX_ITERATIONS)
                         {
                             gemToUse = Random.Range(0, activeGems.Length);
                             attempts++;
                         }
-                        SpawnGem(new Vector2Int(x, y), activeGems[gemToUse]);
+
+                        Gem gem = GemPoolManager.instance.GetGem(activeGems[gemToUse].gemType);
+                        gem.transform.position = GetWorldPosition(spawnFrom);
+                        gem.SetupGem(gridPos, this);
+                        allGems[x, y] = gem;
+                    }
+                    
+                    if (allGems[x, y] == null)
+                    {
+                        Debug.LogError($"RefillBoard 실패: ({x}, {y}) 위치에 보석이 생성되지 않음");
                     }
                 }
             }
         }
 
-        CleanUpUnregisteredGems();
+        LogEmptyTiles("RefillBoard 완료");
+        RemoveOrphanedGems();
     }
 
     // 잉여 보석 제거
-    private void CleanUpUnregisteredGems()
+    private void RemoveOrphanedGems()
     {
         // 모든 Gem 오브젝트를 포함하는 리스트
         List<Gem> foundGems = new List<Gem>();
@@ -678,7 +646,6 @@ public class Board : MonoBehaviour
         }
     }
 
-    // 보드에 정의하세요
     public void ValidateGemPositions()
     {
         for (int x = 0; x < width; x++)
@@ -686,15 +653,16 @@ public class Board : MonoBehaviour
             for (int y = 0; y < height; y++)
             {
                 Gem gem = allGems[x, y];
-                if (gem != null)
+                if (gem == null) continue;
+
+                Vector2Int expected = new Vector2Int(x, y);
+                if (gem.gridIndex != expected)
                 {
-                    if (gem.gridIndex.x != x || gem.gridIndex.y != y)
-                    {
-                        Debug.LogError($"젬 좌표 불일치: {gem.name}, 배열에서는 ({x}, {y})이지만 젬 내부 좌표는 ({gem.gridIndex.x}, {gem.gridIndex.y})");
-                        gem.gridIndex = new Vector2Int(x, y); // 강제 수정
-                    }
+                    Debug.LogWarning($"보석 위치 불일치 수정: {gem.name} => {expected}");
+                    gem.gridIndex = expected;
                 }
             }
         }
     }
+
 }

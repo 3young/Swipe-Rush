@@ -230,9 +230,9 @@ MonoBehaviour:
   scoreManager: {fileID: 969220516}
   board: {fileID: 1461630800}
   waitingForAutoMatches: 0
-  scoreTarget1: 30
-  scoreTarget2: 150
-  scoreTarget3: 300
+  scoreTarget1: 100
+  scoreTarget2: 500
+  scoreTarget3: 1000
 --- !u!4 &44865318
 Transform:
   m_ObjectHideFlags: 0
@@ -242,7 +242,7 @@ Transform:
   m_GameObject: {fileID: 44865316}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 252.08261, y: 348.7771, z: -1.5050161}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -652,7 +652,7 @@ Transform:
   m_GameObject: {fileID: 969220515}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 444.7592, y: 535.91205, z: 6.456424}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -835,8 +835,8 @@ MonoBehaviour:
   activeGems: []
   gemSpeed: 15
   matchFinder: {fileID: 228944946}
-  currentState: 0
   roundManager: {fileID: 44865317}
+  currentState: 0
 --- !u!4 &1461630801
 Transform:
   m_ObjectHideFlags: 0
@@ -853,6 +853,63 @@ Transform:
   - {fileID: 717812896}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &3354333259896899114
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4315463642908343453, guid: 7ede60c4aa7a13d47bd7c9f04e48dff3, type: 3}
+      propertyPath: m_Name
+      value: GemPoolmanager
+      objectReference: {fileID: 0}
+    - target: {fileID: 7894003377796478514, guid: 7ede60c4aa7a13d47bd7c9f04e48dff3, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 506.01544
+      objectReference: {fileID: 0}
+    - target: {fileID: 7894003377796478514, guid: 7ede60c4aa7a13d47bd7c9f04e48dff3, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 238.2331
+      objectReference: {fileID: 0}
+    - target: {fileID: 7894003377796478514, guid: 7ede60c4aa7a13d47bd7c9f04e48dff3, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -1.1880295
+      objectReference: {fileID: 0}
+    - target: {fileID: 7894003377796478514, guid: 7ede60c4aa7a13d47bd7c9f04e48dff3, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7894003377796478514, guid: 7ede60c4aa7a13d47bd7c9f04e48dff3, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7894003377796478514, guid: 7ede60c4aa7a13d47bd7c9f04e48dff3, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7894003377796478514, guid: 7ede60c4aa7a13d47bd7c9f04e48dff3, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7894003377796478514, guid: 7ede60c4aa7a13d47bd7c9f04e48dff3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7894003377796478514, guid: 7ede60c4aa7a13d47bd7c9f04e48dff3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7894003377796478514, guid: 7ede60c4aa7a13d47bd7c9f04e48dff3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 7ede60c4aa7a13d47bd7c9f04e48dff3, type: 3}
 --- !u!1001 &5351898230772872079
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -868,10 +925,6 @@ PrefabInstance:
     - target: {fileID: 1745894390251359443, guid: 577da9d43e6d7824aaf07120edc6f742, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1977986781126032236, guid: 577da9d43e6d7824aaf07120edc6f742, type: 3}
-      propertyPath: totalTime
-      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 1977986781126032236, guid: 577da9d43e6d7824aaf07120edc6f742, type: 3}
       propertyPath: roundManager
@@ -1053,3 +1106,4 @@ SceneRoots:
   - {fileID: 969220517}
   - {fileID: 1044982102}
   - {fileID: 5628932650264596859}
+  - {fileID: 3354333259896899114}
