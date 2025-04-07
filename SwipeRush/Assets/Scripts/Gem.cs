@@ -98,7 +98,6 @@ public class Gem : MonoBehaviour
     /// <summary>
     /// 그리드 좌표를 월드 좌표로 변환
     /// </summary>
-    /// <param name="gridPosition">그리드 좌표</param>
     /// <returns>월드 좌표</returns>
     private Vector3 GetWorldPosition(Vector2Int gridPosition)
     {
@@ -108,8 +107,6 @@ public class Gem : MonoBehaviour
     /// <summary>
     /// 보석을 초기화하고 설정
     /// </summary>
-    /// <param name="position">그리드 위치</param>
-    /// <param name="theBoard">속한 보드</param>
     public void SetupGem(Vector2Int position, Board theBoard)
     {
         // 기본 속성 설정
@@ -189,8 +186,6 @@ public class Gem : MonoBehaviour
     /// <summary>
     /// 지정된 방향의 인접한 보석을 가져옴
     /// </summary>
-    /// <param name="direction">확인할 방향</param>
-    /// <param name="adjacentGem">출력: 인접한 보석</param>
     /// <returns>인접한 보석이 존재하고 이동 가능하면 true</returns>
     private bool TryGetAdjacentGem(SwipeDirection direction, out Gem adjacentGem)
     {

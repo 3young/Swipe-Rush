@@ -8,23 +8,12 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public class UIManager : MonoBehaviour
 {
-    /// <summary>일시 정지 화면</summary>
-    public GameObject pauseScreen;
-    
-    /// <summary>라운드 종료 화면</summary>
-    public GameObject roundOverScreen;
-    
-    /// <summary>별점 UI 요소</summary>
-    public GameObject winStars1, winStars2, winStars3;
-    
-    /// <summary>승리 텍스트</summary>
-    public TMP_Text winText;
-    
-    /// <summary>최종 점수 텍스트</summary>
-    public TMP_Text finalScoreText;
-    
-    /// <summary>레벨 선택 씬 이름</summary>
-    public string LevelSelect;
+    public GameObject pauseScreen;      // 일시정지 화면
+    public GameObject roundOverScreen;  // 라운드 종료 화면
+    public GameObject winStars1, winStars2, winStars3; // 별점
+    public TMP_Text winText;            // 승리 텍스트
+    public TMP_Text finalScoreText;     // 최종 점수 텍스트
+    public string LevelSelect;          // 레벨 선택 씬 이름
 
     /// <summary>
     /// UI 요소를 초기화

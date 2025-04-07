@@ -72,7 +72,6 @@ public class RoundManager : MonoBehaviour
     /// <summary>
     /// 최종 점수를 평가하고 별 등급 부여
     /// </summary>
-    /// <param name="score">플레이어의 최종 점수</param>
     private void EvaluateScore(int score)
     {
         string sceneKey = SceneManager.GetActiveScene().name;
@@ -101,8 +100,6 @@ public class RoundManager : MonoBehaviour
     /// <summary>
     /// 결과 메시지와 별 아이콘 표시
     /// </summary>
-    /// <param name="message">표시할 메시지</param>
-    /// <param name="starObject">활성화할 별 오브젝트</param>
     private void ShowResult(string message, GameObject starObject)
     {
         uiManager.winText.text = message;

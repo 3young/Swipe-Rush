@@ -8,7 +8,7 @@ public class ScoreManager : MonoBehaviour
 {
     public static ScoreManager instance { get; private set; } // 싱글톤 인스턴스
     public int currentScore = 0;     // 현재 점수
-    public TMP_Text scoreText;      // 점수 표시 텍스트
+    public TMP_Text scoreText;       // 점수 표시 텍스트
 
     /// <summary>
     /// 싱글톤 인스턴스 초기화

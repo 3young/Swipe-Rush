@@ -7,10 +7,8 @@ using UnityEngine.UI;
 /// </summary>
 public class CursorController : MonoBehaviour
 {
-    /// <summary>유휴 상태일 때 표시할 커서 이미지</summary>
-    public Sprite cursorIdle; 
-    /// <summary>클릭 상태일 때 표시할 커서 이미지</summary>
-    public Sprite cursorClick; 
+    public Sprite cursorIdle;  // 기본 상태 커서 이미지
+    public Sprite cursorClick; // 클릭 상태 커서 이미지
 
     private Image cursorImage;
     private RectTransform rectTransform;

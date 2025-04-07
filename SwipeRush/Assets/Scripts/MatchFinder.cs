@@ -58,9 +58,6 @@ public class MatchFinder : MonoBehaviour
     /// <summary>
     /// 수평 방향의 매치를 확인
     /// </summary>
-    /// <param name="x">보석의 X 좌표</param>
-    /// <param name="y">보석의 Y 좌표</param>
-    /// <param name="currentGem">검사할 보석</param>
     private void CheckHorizontalMatch(int x, int y, Gem currentGem)
     {
         // 매치 가능한 보석인지 확인
@@ -110,9 +107,6 @@ public class MatchFinder : MonoBehaviour
     /// <summary>
     /// 수직 방향의 매치를 확인
     /// </summary>
-    /// <param name="x">보석의 X 좌표</param>
-    /// <param name="y">보석의 Y 좌표</param>
-    /// <param name="currentGem">검사할 보석</param>
     private void CheckVerticalMatch(int x, int y, Gem currentGem)
     {
         // 매치 가능한 보석인지 확인

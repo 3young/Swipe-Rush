@@ -144,8 +144,6 @@ public class Board : MonoBehaviour
     /// <summary>
     /// 지정된 위치에 보석 생성
     /// </summary>
-    /// <param name="gridPos">보석을 생성할 그리드 위치</param>
-    /// <param name="gemPrefab">생성할 보석 프리팹</param>
     private void SpawnGem(Vector2Int gridPos, Gem gemPrefab)
     {
         // 스톤 블록 개수 관리
